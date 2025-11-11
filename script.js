@@ -1,6 +1,5 @@
 // === Simple static CV chatbot for "Jordan Rivera" ===
 // No backend, no API key, no OpenAI.
-
 // ---------- DOM ----------
 const chatBox = document.getElementById("chat-box");
 const form = document.getElementById("chat-form");
@@ -8,7 +7,6 @@ const input = document.getElementById("user-input");
 const helpBtn = document.getElementById("help-btn");
 const helpModal = document.getElementById("help-modal");
 const closeHelp = document.getElementById("close-help");
-
 // ---------- Utilities ----------
 function escapeHtml(s = "") {
   return s
@@ -16,7 +14,6 @@ function escapeHtml(s = "") {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 }
-
 function normalize(str = "") {
   return str
     .toLowerCase()
@@ -25,30 +22,24 @@ function normalize(str = "") {
     .replace(/\s+/g, " ")
     .trim();
 }
-
 // Very light language detection: check question + browser language
 function detectLanguage(question) {
   const q = normalize(question);
   const browser = (navigator.language || "en").slice(0, 2).toLowerCase();
-
   // Hard hints
   if (q.match(/¿|¡| carrera|fortalezas|herramientas|plazos/)) return "es";
   if (q.match(/ à | de | sa carrière|quelles|outils|délais/)) return "fr";
-
   // Simple words
   if (q.match(/que edad|cuantos anos|hazme un resumen|idiomas/)) return "es";
   if (q.match(/quel age|quelles sont ses|parcours|delais/)) return "fr";
-
   // Fallback to browser, else English
   if (browser === "es") return "es";
   if (browser === "fr") return "fr";
   return "en";
 }
-
 // ---------- Q&A BANK (Jordan Rivera, she/her) ----------
 // Each cluster: triggers per language and answers per language.
 // If a trigger substring is found in the question, we use that cluster.
-
 const QA_CLUSTERS = [
   // === BOUNDARIES ===
   {
@@ -131,17 +122,30 @@ const QA_CLUSTERS = [
       ]
     }
   },
-
   // === NORMAL CV / INTERVIEW TOPICS ===
-
   // 1) Career overview / profile
   {
     id: "overview",
     type: "normal",
     triggers: {
-      en: ["overview", "summary", "resume", "cv", "background", "walk me through"],
-      es: ["resumen", "resumen rapido", "trayectoria", "cv", "curriculum"],
-      fr: ["resumé", "résumé", "parcours", "vue d'ensemble", "cv"]
+      en: [
+        "overview", "summary", "resume", "cv", "background", "walk me through",
+        // NEW ONES
+        "what's her background", "can i get a summary of her experience",
+        "walk me through her cv", "give me an overview of her resume"
+      ],
+      es: [
+        "resumen", "resumen rapido", "trayectoria", "cv", "curriculum",
+        // NEW ONES
+        "¿cuál es su trayectoria", "puedes darme un resumen de su experiencia",
+        "hazme un recorrido por su cv", "dame una visión general de su currículum"
+      ],
+      fr: [
+        "resumé", "résumé", "parcours", "vue d'ensemble", "cv",
+        // NEW ONES
+        "quel est son parcours", "puis-je avoir un résumé de son expérience",
+        "fais-moi un tour de son cv", "donne-moi un aperçu de son curriculum"
+      ]
     },
     answers: {
       en: [
@@ -158,15 +162,26 @@ const QA_CLUSTERS = [
       ]
     }
   },
-
   // 2) Current role
   {
     id: "current_role",
     type: "normal",
     triggers: {
-      en: ["current role", "what does she do now", "what does she do in her current role"],
-      es: ["puesto actual", "que hace ahora", "rol actual"],
-      fr: ["poste actuel", "que fait-elle actuellement", "role actuel"]
+      en: [
+        "current role", "what does she do now", "what does she do in her current role",
+        // NEW ONES
+        "what does she do in her current job", "what's her current role", "what does she do now"
+      ],
+      es: [
+        "puesto actual", "que hace ahora", "rol actual",
+        // NEW ONES
+        "qué hace en su trabajo actual", "cuál es su rol actual", "qué hace ahora"
+      ],
+      fr: [
+        "poste actuel", "que fait-elle actuellement", "role actuel",
+        // NEW ONES
+        "que fait-elle dans son poste actuel", "quel est son rôle actuel", "que fait-elle maintenant"
+      ]
     },
     answers: {
       en: [
@@ -183,15 +198,29 @@ const QA_CLUSTERS = [
       ]
     }
   },
-
   // 3) Experience by company (generic)
   {
     id: "experience_company",
     type: "normal",
     triggers: {
-      en: ["what did she do at", "her role at", "previous company"],
-      es: ["que hacia en", "su rol en", "empresa anterior"],
-      fr: ["que faisait-elle chez", "son role chez", "entreprise precedente"]
+      en: [
+        "what did she do at", "her role at", "previous company",
+        // NEW ONES
+        "what did she do at distilled", "what was her role at indigo",
+        "what did she do in previous companies"
+      ],
+      es: [
+        "que hacia en", "su rol en", "empresa anterior",
+        // NEW ONES
+        "qué hizo en distilled", "cuál fue su rol en indigo",
+        "qué hizo en empresas anteriores"
+      ],
+      fr: [
+        "que faisait-elle chez", "son role chez", "entreprise precedente",
+        // NEW ONES
+        "que faisait-elle chez distilled", "quel était son rôle chez indigo",
+        "que faisait-elle dans ses entreprises précédentes"
+      ]
     },
     answers: {
       en: [
@@ -208,15 +237,26 @@ const QA_CLUSTERS = [
       ]
     }
   },
-
   // 4) Strengths
   {
     id: "strengths",
     type: "normal",
     triggers: {
-      en: ["strengths", "main strengths", "strongest skills", "what is she best at"],
-      es: ["fortalezas", "puntos fuertes", "principales fortalezas"],
-      fr: ["forces", "points forts", "principales forces"]
+      en: [
+        "strengths", "main strengths", "strongest skills", "what is she best at",
+        // NEW ONES
+        "what are her strengths", "what is she best at", "what are her strongest skills"
+      ],
+      es: [
+        "fortalezas", "puntos fuertes", "principales fortalezas",
+        // NEW ONES
+        "cuáles son sus fortalezas", "en qué es mejor", "cuáles son sus habilidades más fuertes"
+      ],
+      fr: [
+        "forces", "points forts", "principales forces",
+        // NEW ONES
+        "quelles sont ses forces", "en quoi est-elle la meilleure", "quelles sont ses compétences les plus fortes"
+      ]
     },
     answers: {
       en: [
@@ -233,15 +273,29 @@ const QA_CLUSTERS = [
       ]
     }
   },
-
   // 5) Weaknesses / growth areas
   {
     id: "weaknesses",
     type: "normal",
     triggers: {
-      en: ["weaknesses", "weakness", "what is she working on improving", "improvement areas"],
-      es: ["puntos debiles", "debilidades", "en que esta trabajando para mejorar"],
-      fr: ["faiblesses", "points faibles", "sur quoi travaille-t-elle pour s'ameliorer"]
+      en: [
+        "weaknesses", "weakness", "what is she working on improving", "improvement areas",
+        // NEW ONES
+        "what is she working on improving", "what are her weaknesses",
+        "what areas is she trying to grow"
+      ],
+      es: [
+        "puntos debiles", "debilidades", "en que esta trabajando para mejorar",
+        // NEW ONES
+        "en qué está trabajando para mejorar", "cuáles son sus debilidades",
+        "en qué áreas está intentando crecer"
+      ],
+      fr: [
+        "faiblesses", "points faibles", "sur quoi travaille-t-elle pour s'ameliorer",
+        // NEW ONES
+        "sur quoi travaille-t-elle pour s'améliorer", "quelles sont ses faiblesses",
+        "dans quels domaines cherche-t-elle à progresser"
+      ]
     },
     answers: {
       en: [
@@ -258,15 +312,29 @@ const QA_CLUSTERS = [
       ]
     }
   },
-
   // 6) Tools / stack
   {
     id: "tools",
     type: "normal",
     triggers: {
-      en: ["which tools", "tool stack", "software does she use"],
-      es: ["que herramientas usa", "con que herramientas trabaja", "stack de herramientas"],
-      fr: ["quels outils", "avec quels outils travaille-t-elle", "stack d'outils"]
+      en: [
+        "which tools", "tool stack", "software does she use",
+        // NEW ONES
+        "what tools does she use", "which tools are in her stack",
+        "what software is she familiar with"
+      ],
+      es: [
+        "que herramientas usa", "con que herramientas trabaja", "stack de herramientas",
+        // NEW ONES
+        "qué herramientas usa", "cuáles son las herramientas de su stack",
+        "con qué software está familiarizada"
+      ],
+      fr: [
+        "quels outils", "avec quels outils travaille-t-elle", "stack d'outils",
+        // NEW ONES
+        "quels outils utilise-t-elle", "quels outils sont dans son stack",
+        "avec quel logiciel est-elle familière"
+      ]
     },
     answers: {
       en: [
@@ -283,15 +351,26 @@ const QA_CLUSTERS = [
       ]
     }
   },
-
   // 7) Languages spoken
   {
     id: "languages_spoken",
     type: "normal",
     triggers: {
-      en: ["which languages does she speak", "what languages can she work in", "languages spoken"],
-      es: ["que idiomas habla", "en que idiomas puede trabajar"],
-      fr: ["quelles langues parle-t-elle", "dans quelles langues peut-elle travailler"]
+      en: [
+        "which languages does she speak", "what languages can she work in", "languages spoken",
+        // NEW ONES
+        "what languages does she speak", "which languages can she work in"
+      ],
+      es: [
+        "que idiomas habla", "en que idiomas puede trabajar",
+        // NEW ONES
+        "qué idiomas habla", "en qué idiomas puede trabajar"
+      ],
+      fr: [
+        "quelles langues parle-t-elle", "dans quelles langues peut-elle travailler",
+        // NEW ONES
+        "quelles langues parle-t-elle", "dans quelles langues peut-elle travailler"
+      ]
     },
     answers: {
       en: [
@@ -308,15 +387,26 @@ const QA_CLUSTERS = [
       ]
     }
   },
-
   // 8) Work style / teamwork
   {
     id: "work_style",
     type: "normal",
     triggers: {
-      en: ["how does she work in a team", "collaboration style", "work style", "teamwork"],
-      es: ["como trabaja en equipo", "estilo de colaboracion", "forma de trabajar"],
-      fr: ["comment travaille-t-elle en equipe", "style de collaboration", "maniere de travailler"]
+      en: [
+        "how does she work in a team", "collaboration style", "work style", "teamwork",
+        // NEW ONES
+        "what’s her collaboration style", "how does she work in a team", "what is her work style"
+      ],
+      es: [
+        "como trabaja en equipo", "estilo de colaboracion", "forma de trabajar",
+        // NEW ONES
+        "cuál es su estilo de colaboración", "cómo trabaja en equipo", "cuál es su forma de trabajar"
+      ],
+      fr: [
+        "comment travaille-t-elle en equipe", "style de collaboration", "maniere de travailler",
+        // NEW ONES
+        "quel est son style de collaboration", "comment travaille-t-elle en équipe", "quelle est sa manière de travailler"
+      ]
     },
     answers: {
       en: [
@@ -333,15 +423,29 @@ const QA_CLUSTERS = [
       ]
     }
   },
-
   // 9) Handling pressure / deadlines
   {
     id: "deadlines",
     type: "normal",
     triggers: {
-      en: ["tight deadlines", "work under pressure", "handle deadlines", "time pressure"],
-      es: ["plazos ajustados", "trabajar bajo presion", "tiempo limite"],
-      fr: ["delais serres", "travailler sous pression", "gere les delais"]
+      en: [
+        "tight deadlines", "work under pressure", "handle deadlines", "time pressure",
+        // NEW ONES
+        "how does she handle tight deadlines", "can she work under pressure",
+        "how does she manage time pressure"
+      ],
+      es: [
+        "plazos ajustados", "trabajar bajo presion", "tiempo limite",
+        // NEW ONES
+        "cómo maneja plazos ajustados", "puede trabajar bajo presión",
+        "cómo gestiona la presión de tiempo"
+      ],
+      fr: [
+        "delais serres", "travailler sous pression", "gere les delais",
+        // NEW ONES
+        "comment gère-t-elle les délais serrés", "peut-elle travailler sous pression",
+        "comment gère-t-elle la pression temporelle"
+      ]
     },
     answers: {
       en: [
@@ -358,15 +462,26 @@ const QA_CLUSTERS = [
       ]
     }
   },
-
   // 10) Motivation / fit
   {
     id: "motivation_fit",
     type: "normal",
     triggers: {
-      en: ["what motivates her", "why would she be a good fit", "motivation", "fit for this role"],
-      es: ["que la motiva", "por que seria un buen fichaje", "encaje con el puesto"],
-      fr: ["ce qui la motive", "pourquoi serait-elle un bon recrutement", "motivation pour ce poste"]
+      en: [
+        "what motivates her", "why would she be a good fit", "motivation", "fit for this role",
+        // NEW ONES
+        "what motivates her", "why is she a good fit", "what drives her"
+      ],
+      es: [
+        "que la motiva", "por que seria un buen fichaje", "encaje con el puesto",
+        // NEW ONES
+        "qué la motiva", "por qué sería un buen fichaje", "qué la impulsa"
+      ],
+      fr: [
+        "ce qui la motive", "pourquoi serait-elle un bon recrutement", "motivation pour ce poste",
+        // NEW ONES
+        "qu'est-ce qui la motive", "pourquoi serait-elle un bon recrutement", "qu'est-ce qui la pousse"
+      ]
     },
     answers: {
       en: [
@@ -384,12 +499,10 @@ const QA_CLUSTERS = [
     }
   }
 ];
-
 // ---------- Matching logic ----------
 function findAnswer(question) {
   const lang = detectLanguage(question);
   const qNorm = normalize(question);
-
   // Try to match any cluster
   for (const cluster of QA_CLUSTERS) {
     const trigList = cluster.triggers[lang] || [];
@@ -403,7 +516,6 @@ function findAnswer(question) {
       }
     }
   }
-
   // Fallback: generic scope message
   let fallback;
   if (lang === "es") {
@@ -418,70 +530,57 @@ function findAnswer(question) {
   }
   return { lang, answer: fallback, type: "fallback", id: "fallback" };
 }
-
 // ---------- Chat UI helpers ----------
 function addMessage(sender, msg, who = "bot") {
   const wrap = document.createElement("div");
   wrap.className = `msg ${who === "you" ? "you" : "bot"}`;
-
   if (who === "bot") {
     const avatar = document.createElement("div");
     avatar.className = "avatar";
     avatar.textContent = "J";
     wrap.appendChild(avatar);
   }
-
   const bubble = document.createElement("div");
   bubble.className = "bubble";
   bubble.innerHTML = `<span class="sender">${escapeHtml(sender)}</span><p>${escapeHtml(
     msg
   )}</p>`;
-
   wrap.appendChild(bubble);
   chatBox.appendChild(wrap);
   chatBox.scrollTop = chatBox.scrollHeight;
 }
-
 function showTyping() {
   const wrap = document.createElement("div");
   wrap.className = "msg bot typing-indicator";
   wrap.id = "typing-indicator";
-
   const avatar = document.createElement("div");
   avatar.className = "avatar";
   avatar.textContent = "J";
-
   const bubble = document.createElement("div");
   bubble.className = "bubble";
   bubble.innerHTML =
     '<span class="sender">Jordan, Distilled</span><div class="typing-dots"><span></span><span></span><span></span></div>';
-
   wrap.appendChild(avatar);
   wrap.appendChild(bubble);
   chatBox.appendChild(wrap);
   chatBox.scrollTop = chatBox.scrollHeight;
 }
-
 function hideTyping() {
   const typing = document.getElementById("typing-indicator");
   if (typing) typing.remove();
 }
-
 // ---------- Help modal ----------
 helpBtn.addEventListener("click", () => {
   helpModal.classList.remove("hidden");
 });
-
 closeHelp.addEventListener("click", () => {
   helpModal.classList.add("hidden");
 });
-
 helpModal.addEventListener("click", (e) => {
   if (e.target === helpModal) {
     helpModal.classList.add("hidden");
   }
 });
-
 document.querySelectorAll(".sample-question").forEach((btn) => {
   btn.addEventListener("click", () => {
     const q = btn.getAttribute("data-question") || "";
@@ -490,30 +589,24 @@ document.querySelectorAll(".sample-question").forEach((btn) => {
     form.dispatchEvent(new Event("submit"));
   });
 });
-
 // ---------- Form handling ----------
 form.addEventListener("submit", (e) => {
   e.preventDefault();
   const userMsg = input.value.trim();
   if (!userMsg) return;
-
   addMessage("You", userMsg, "you");
   input.value = "";
-
   showTyping();
-
   setTimeout(() => {
     const { answer } = findAnswer(userMsg);
     hideTyping();
     addMessage("Jordan, Distilled", answer, "bot");
   }, 400); // small delay to show typing indicator
 });
-
 // ---------- Initial greeting ----------
 (function initialGreeting() {
   const browser = (navigator.language || "en").slice(0, 2).toLowerCase();
   let greet;
-
   if (browser === "es") {
     greet =
       "Hola. Soy la versión interactiva del CV de Jordan Rivera. Respondo en inglés, español y francés a preguntas sobre su experiencia y forma de trabajar.";
@@ -524,6 +617,5 @@ form.addEventListener("submit", (e) => {
     greet =
       "Hi. I’m the interactive résumé of Jordan Rivera. I can answer in English, Spanish, and French about her experience, skills, and work style.";
   }
-
   addMessage("Jordan, Distilled", greet, "bot");
 })();
